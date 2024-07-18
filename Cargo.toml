@@ -10,7 +10,7 @@ glutin-winit = "0.3.0"
 winit = "0.28.2"
 raw-window-handle = "0.5.1"
 skia-safe = { version = "0.75.0", features = ["gl", "textlayout", "svg"] }
-rfd = "0.13.0"
+rfd = { version = "0.14.1", features = ["gtk3"], default-features = false }
 
 [target."cfg(target_os = \"linux\")".dependencies.skia-safe]
 version = "0.75.0"
