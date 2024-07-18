@@ -1,0 +1,17 @@
+[package]
+name = "rust-skia-svg-rendering"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+gl = "*"
+glutin = "0.30.6"
+glutin-winit = "0.3.0"
+winit = "0.28.2"
+raw-window-handle = "0.5.1"
+skia-safe = { version = "0.75.0", features = ["gl", "textlayout", "svg"] }
+rfd = "0.14.1"
+
+[target."cfg(target_os = \"linux\")".dependencies.skia-safe]
+version = "0.75.0"
+features = ["gl", "textlayout", "svg", "x11", "wayland"]
