@@ -1,3 +1,4 @@
+use glutin::prelude::PossiblyCurrentContextGlSurfaceAccessor;
 use skia_safe::{
     gpu::{
         self, backend_render_targets, direct_contexts, surfaces::wrap_backend_render_target,
@@ -330,6 +331,7 @@ fn main() {
             previous_frame_start = frame_start;
         }
         if draw_frame {
+            env.gl_context.make_current(&env.gl_surface).unwrap();
             let canvas = env.surface.canvas();
             canvas.clear(Color::WHITE);
             renderer::render_frame(&canvas, &font_mgr);
