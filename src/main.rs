@@ -300,29 +300,17 @@ fn main() {
                     input:
                         KeyboardInput {
                             state: ElementState::Released,
-                            virtual_keycode,
                             ..
                         },
                     ..
                 } => {
-                    if virtual_keycode == Some(VirtualKeyCode::A) {
-                        std::thread::spawn(|| {
-                            println!("Picking file...");
+                    std::thread::spawn(|| {
+                        println!("Picking file...");
 
-                            let path = rfd::FileDialog::new().add_filter("text", &["txt", "rs"])
-                            .add_filter("rust", &["rs", "toml"]).set_directory("/").pick_file();
+                        let path = rfd::FileDialog::new().pick_file();
 
-                            println!("{path:?}");
-                        });
-                    } else if virtual_keycode == Some(VirtualKeyCode::B) {
-                        std::thread::spawn(|| {
-                            println!("Picking folder...");
-
-                            let path = rfd::FileDialog::new().pick_folder();
-
-                            println!("{path:?}");
-                        });
-                    }
+                        println!("{path:?}");
+                    });
                 }
                 _ => (),
             },
