@@ -309,7 +309,7 @@ fn main() {
                         std::thread::spawn(|| {
                             println!("Picking file...");
 
-                            let path = rfd::FileDialog::new().pick_file();
+                            let path = rfd::FileDialog::new().set_directory("/").pick_file();
 
                             println!("{path:?}");
                         });
