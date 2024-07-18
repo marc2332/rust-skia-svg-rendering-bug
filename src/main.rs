@@ -1,5 +1,14 @@
-use skia_safe::{gpu::{self, backend_render_targets, direct_contexts, surfaces::wrap_backend_render_target, DirectContext}, textlayout::FontCollection, FontMgr};
-use winit::{dpi::PhysicalSize, event::ElementState};
+use skia_safe::{
+    gpu::{
+        self, backend_render_targets, direct_contexts, surfaces::wrap_backend_render_target,
+        DirectContext,
+    },
+    FontMgr,
+};
+use winit::{
+    dpi::PhysicalSize,
+    event::{ElementState, VirtualKeyCode},
+};
 
 const FERRIS: &str = r#"
     <?xml version="1.0" encoding="UTF-8" standalone="no"?>
@@ -53,13 +62,11 @@ const FERRIS: &str = r#"
 
 mod renderer {
     #![allow(clippy::unusual_byte_groupings)]
-    use skia_safe::{textlayout::FontCollection, svg, FontMgr, Paint, Path, Rect};
+    use skia_safe::{svg, FontMgr};
 
     use crate::FERRIS;
 
     pub fn render_frame(canvas: &skia_safe::canvas::Canvas, font_mgr: impl Into<FontMgr>) {
-       
-
         let mut svg_dom = svg::Dom::from_str(&FERRIS.trim(), font_mgr).unwrap();
         canvas.save();
         svg_dom.set_container_size((400., 400.0));
@@ -89,20 +96,17 @@ fn main() {
     };
 
     use winit::{
-        event::{Event, KeyboardInput, VirtualKeyCode, WindowEvent},
+        event::{Event, KeyboardInput, WindowEvent},
         event_loop::{ControlFlow, EventLoop},
         window::{Window, WindowBuilder},
     };
 
     use skia_safe::{
-        gpu::{gl::FramebufferInfo, BackendRenderTarget, SurfaceOrigin},
+        gpu::{gl::FramebufferInfo, SurfaceOrigin},
         Color, ColorType, Surface,
     };
 
-    let mut font_collection = FontCollection::new();
     let font_mgr = FontMgr::default();
-    font_collection.set_dynamic_font_manager(font_mgr.clone());
-    font_collection.set_default_font_manager(font_mgr.clone(), None);
 
     let el = EventLoop::new();
     let winit_window_builder = WindowBuilder::new()
@@ -193,7 +197,7 @@ fn main() {
     .expect("Could not create interface");
 
     let mut gr_context =
-            direct_contexts::make_gl(interface, None).expect("Could not create direct context");
+        direct_contexts::make_gl(interface, None).expect("Could not create direct context");
 
     let fb_info = {
         let mut fboid: GLint = 0;
@@ -202,36 +206,35 @@ fn main() {
         FramebufferInfo {
             fboid: fboid.try_into().unwrap(),
             format: skia_safe::gpu::gl::Format::RGBA8.into(),
-            protected: gpu::Protected::No
+            protected: gpu::Protected::No,
         }
     };
 
-    
-/// Create the surface for Skia to render in
-pub fn create_surface(
-    window: &mut Window,
-    fb_info: FramebufferInfo,
-    gr_context: &mut DirectContext,
-    num_samples: usize,
-    stencil_size: usize,
-) -> Surface {
-    let size = window.inner_size();
-    let size = (
-        size.width.try_into().expect("Could not convert width"),
-        size.height.try_into().expect("Could not convert height"),
-    );
-    let backend_render_target =
-        backend_render_targets::make_gl(size, num_samples, stencil_size, fb_info);
-    wrap_backend_render_target(
-        gr_context,
-        &backend_render_target,
-        SurfaceOrigin::BottomLeft,
-        ColorType::RGBA8888,
-        None,
-        None,
-    )
-    .expect("Could not create skia surface")
-}
+    /// Create the surface for Skia to render in
+    pub fn create_surface(
+        window: &mut Window,
+        fb_info: FramebufferInfo,
+        gr_context: &mut DirectContext,
+        num_samples: usize,
+        stencil_size: usize,
+    ) -> Surface {
+        let size = window.inner_size();
+        let size = (
+            size.width.try_into().expect("Could not convert width"),
+            size.height.try_into().expect("Could not convert height"),
+        );
+        let backend_render_target =
+            backend_render_targets::make_gl(size, num_samples, stencil_size, fb_info);
+        wrap_backend_render_target(
+            gr_context,
+            &backend_render_target,
+            SurfaceOrigin::BottomLeft,
+            ColorType::RGBA8888,
+            None,
+            None,
+        )
+        .expect("Could not create skia surface")
+    }
 
     let num_samples = 0; //gl_config.num_samples() as usize;
     let stencil_size = gl_config.stencil_size() as usize;
@@ -243,8 +246,6 @@ pub fn create_surface(
         num_samples,
         stencil_size,
     );
-
-    let mut frame = 0usize;
 
     // Guarantee the drop order inside the FnMut closure. `Window` _must_ be dropped after
     // `DirectContext`.
@@ -266,7 +267,6 @@ pub fn create_surface(
         window,
     };
     let mut previous_frame_start = Instant::now();
-
 
     el.run(move |event, _, control_flow| {
         let frame_start = Instant::now();
@@ -296,33 +296,32 @@ pub fn create_surface(
                         NonZeroU32::new(height).unwrap(),
                     );
                 }
-                WindowEvent::MouseInput { state, .. } => {
-                    if state == ElementState::Released {
-                        std::thread::spawn(|| {
-                            println!("Picking file...");
-    
-                            let path = rfd::FileDialog::new().pick_folder();
-    
-                            println!("{path:?}");
-                        });
-                    }
-                }
                 WindowEvent::KeyboardInput {
                     input:
                         KeyboardInput {
+                            state: ElementState::Released,
                             virtual_keycode,
-                            modifiers,
                             ..
                         },
                     ..
                 } => {
-                    if modifiers.logo() {
-                        if let Some(VirtualKeyCode::Q) = virtual_keycode {
-                            *control_flow = ControlFlow::Exit;
-                        }
+                    if virtual_keycode == Some(VirtualKeyCode::A) {
+                        std::thread::spawn(|| {
+                            println!("Picking file...");
+
+                            let path = rfd::FileDialog::new().pick_file();
+
+                            println!("{path:?}");
+                        });
+                    } else if virtual_keycode == Some(VirtualKeyCode::B) {
+                        std::thread::spawn(|| {
+                            println!("Picking folder...");
+
+                            let path = rfd::FileDialog::new().pick_folder();
+
+                            println!("{path:?}");
+                        });
                     }
-                    frame = frame.saturating_sub(10);
-                    env.window.request_redraw();
                 }
                 _ => (),
             },
